@@ -9,8 +9,8 @@ Implemented using [Flask][] microframework.
 Clone the repo:
 
 ``` bash
-git clone git@gitlab.com:ContainerSolutions/titanic-api.git
-cd titanic-api/python/
+git clone https://github.com/PipeOpsHQ/titanic-api.git
+cd titanic-api
 ```
 
 ### Install
