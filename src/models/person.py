@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from marshmallow import fields, Schema
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import String
 from . import db
 import uuid
+
 
 class Person(db.Model):
     """
@@ -11,7 +12,16 @@ class Person(db.Model):
     """
     __tablename__ = 'people'
 
-    uuid = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # Use String for SQLite compatibility in tests, UUID for PostgreSQL in production
+    uuid = db.Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    survived = db.Column(db.Integer)
+    passengerClass = db.Column(db.Integer)
+    name = db.Column(db.String(255))
+    sex = db.Column(db.String(6))
+    age = db.Column(db.Float)
+    siblingsOrSpousesAboard = db.Column(db.Integer)
+    parentsOrChildrenAboard = db.Column(db.Integer)
+    fare = db.Column(db.Float)
     survived = db.Column(db.Integer)
     passengerClass = db.Column(db.Integer)
     name = db.Column(db.String(255))

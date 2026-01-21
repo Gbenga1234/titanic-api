@@ -19,6 +19,7 @@ def get_all() -> Response:
 
     return custom_response(people_serialized, 200)
 
+
 @people_api.route('people/<person_uuid>', methods=['PUT'])
 def update_person(person_uuid: str) -> Response:
     """
@@ -39,6 +40,7 @@ def update_person(person_uuid: str) -> Response:
 
     return custom_response(people_serialized, 200)
 
+
 @people_api.route('people/<person_uuid>', methods=['DELETE'])
 def delete_person(person_uuid: str) -> Response:
     """
@@ -56,6 +58,7 @@ def delete_person(person_uuid: str) -> Response:
     person.delete()
     return custom_response("OK", 200)
 
+
 @people_api.route('people/<person_uuid>', methods=['GET'])
 def get_by_id(person_uuid: str) -> Response:
     """
@@ -69,7 +72,7 @@ def get_by_id(person_uuid: str) -> Response:
     """
     people = Person.get_by_id(person_uuid)
     if isinstance(people, type(None)):
-        return custom_response("Person not found",404)
+        return custom_response("Person not found", 404)
     people_serialized = person_schema.dump(people)
 
     return custom_response(people_serialized, 200)
@@ -97,13 +100,13 @@ def add_passenger() -> Response:
 def custom_response(response_body: dict, status_code: int) -> Response:
     """
     Wrapper function creating a response with common parameters
-    
+
     Parameters:
         response_body: the response body
         status_code: the status code of the response
-        
+
     Returns:
-        The Response object that Flask can return  
+        The Response object that Flask can return
     """
     return Response(
         mimetype="application/json",
