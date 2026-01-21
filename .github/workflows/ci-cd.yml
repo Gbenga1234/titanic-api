@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ main ]
 
+# Required permissions for security scanning and SARIF upload
+permissions:
+  contents: read
+  security-events: write  # Required for SARIF upload to Security tab
+  actions: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -64,7 +70,7 @@ jobs:
         fi
 
     - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@0.30.0
+      uses: aquasecurity/trivy-action@0.31.0
       continue-on-error: true
       with:
         scan-type: 'image'
@@ -86,10 +92,18 @@ jobs:
         fi
 
     - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v3
-      if: always()
+      uses: github/codeql-action/upload-sarif@v4
+      if: always() && github.event_name == 'push'
       with:
         sarif_file: 'trivy-results.sarif'
+        category: 'trivy'
+
+    - name: Show scan results for PRs
+      if: github.event_name == 'pull_request'
+      run: |
+        echo "SARIF upload skipped for pull requests from forks."
+        echo "Trivy scan results are available in the workflow logs."
+        echo "For security scanning on PRs, consider using a self-hosted runner or alternative approach."
 
   build-and-push:
     runs-on: ubuntu-latest
