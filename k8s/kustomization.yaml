@@ -1,0 +1,16 @@
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - deployment-app.yaml
+  - service-clusterip.yaml
+  - service-loadbalancer.yaml
+  - ingress.yaml
+  - pvc-postgres.yaml
+  - statefulset-postgres.yaml
+  - hpa.yaml
+  - pdb.yaml
+  - networkpolicy-db.yaml
+  - resourcequota.yaml
+  - limitrange.yaml
+  - serviceaccount-rolebinding.yaml

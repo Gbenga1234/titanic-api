@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-lb
+  namespace: pipeops
+  labels:
+    app: myapp
+spec:
+  type: LoadBalancer
+  selector:
+    app: myapp
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 5000
+  # For cloud providers, annotations may be required for health checks or LB SKU
+  # annotations:
+  #   service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: "/health/ready"

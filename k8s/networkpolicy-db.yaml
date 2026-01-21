@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-allow-from-myapp
+  namespace: pipeops
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: pipeops
+          # allow pods with label app=myapp in the same namespace
+        - podSelector:
+            matchLabels:
+              app: myapp
+      ports:
+        - protocol: TCP
+          port: 5432
+
+  # No egress rules defined: defaults allow egress. To be more restrictive, define egress stanza.
