@@ -98,7 +98,7 @@ class PersonSchema(Schema):
     passengerClass = fields.Int(required=True)
     name = fields.String(required=True)
     sex = fields.String(required=True)
-    age = fields.Int(required=True)
+    age = fields.Float(required=True)
     siblingsOrSpousesAboard = fields.Int(required=True)
     parentsOrChildrenAboard = fields.Int(required=True)
     fare = fields.Float(required=True)

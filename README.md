@@ -1,51 +1,65 @@
-# titanic-api: Flask
+# Titanic API: Flask
 
 Implemented using [Flask][] microframework.
 
-## Installation and launching
+## CI/CD Pipeline
+
+This project uses GitHub Actions for automated CI/CD. See [.github/README.md](.github/README.md) for details.
+
+## Installation and Launching
+
+### Prerequisites
+
+- Docker and Docker Compose installed
+- For non-sudo Docker access: User added to `docker` group (log out and back in after `sudo usermod -aG docker $USER`)
 
 ### Clone
 
 Clone the repo:
 
-``` bash
+```bash
 git clone https://github.com/PipeOpsHQ/titanic-api.git
 cd titanic-api
 ```
 
-### Install
+### Development Environment
 
-Use [venv][] or any other ([Pipenv][], [Poetry][], etc) [environment management][] tool to install dependencies in the same folder.
-Activate virtual environment and run:
+To run in development mode with hot-reload:
 
-``` bash
-pip install -r requirements.txt
+```bash
+docker-compose -f docker-compose.dev.yml up --build
 ```
 
-### Launch
+- App runs on <http://localhost:5000>
+- Hot-reload enabled via volume mounting
+- Database persists data in named volume
 
-This API was tested using postgres. In order to bring it up, the following commands are needed:
+### Production Environment
 
-1) Start postgres locally with `docker run --net=host --name titanic-db -e POSTGRES_PASSWORD=password -e POSTGRES_USER=user -d postgres`
-3) Run the sql file with the database definition `docker cp titanic.sql titanic-db:/`
-4) Run the sql file with `docker exec -it --rm titanic-db psql -U user -d postgres -f titanic.sql`
+To run in production mode:
 
-
-After you have database server deployed and running, use environment variable `DATABASE_URL` to provide database connection string.
-
-``` bash
-DATABASE_URL=postgresql+psycopg2://user:password@127.0.0.1:5432/postgres python run.py
+```bash
+docker-compose up --build
 ```
 
-Go to <http://127.0.0.1:5000/> in your browser.
+- Optimized multi-stage build (< 200MB image)
+- Non-root user for security
+- Health checks included
 
-Test it by:
-1) See the database is currently empty with: `http://127.0.0.1:5000/people`
-2) Add a new user with `curl -H "Content-Type: application/json" -X POST localhost:5000/people -d'{"survived": 2,"passengerClass": 2,"name": "Mr. Owen Harris Braund","sex": "male","age": 22.0,"siblingsOrSpousesAboard": 4,"parentsOrChildrenAboard": 5,"fare": 7.25}`
-3) Check out if the user was added with `http://127.0.0.1:5000/people`
+### Manual Testing
+
+Once running, test the API:
+
+1. Check empty database: `curl http://localhost:5000/people`
+2. Add a passenger: `curl -H "Content-Type: application/json" -X POST localhost:5000/people -d'{"survived": 0,"passengerClass": 1,"name": "Test Passenger","sex": "male","age": 25.0,"siblingsOrSpousesAboard": 0,"parentsOrChildrenAboard": 0,"fare": 10.0}'`
+3. Verify addition: `curl http://localhost:5000/people`
+
+### Architecture
+
+- **Multi-stage Dockerfile**: Builder stage for dependencies, runtime stage for execution
+- **Security**: Non-root user, minimal base image
+- **Database**: PostgreSQL with automatic initialization
+- **Networking**: Isolated Docker network
+- **Persistence**: Named volumes for data
 
 [Flask]: http://flask.pocoo.org/
-[venv]: https://docs.python.org/3/tutorial/venv.html
-[Pipenv]: https://pipenv.pypa.io/en/latest/
-[Poetry]: https://python-poetry.org/docs/
-[environment management]: http://docs.python-guide.org/en/latest/dev/virtualenvs/

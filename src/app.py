@@ -18,6 +18,10 @@ def create_app(env_name: str) -> Flask:
     app.config.from_object(app_config[env_name])
     db.init_app(app)
 
+    with app.app_context():
+        db.create_all()
+        print("Tables created")
+
     app.register_blueprint(people, url_prefix="/")
 
     @app.route('/', methods=['GET'])
