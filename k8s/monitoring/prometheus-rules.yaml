@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-rules
+  namespace: monitoring
+data:
+  alert-rules.yml: |
+    groups:
+      - name: kubernetes.rules
+        interval: 30s
+        rules:
+          - alert: PodCrashLooping
+            expr: rate(kube_pod_container_status_restarts_total[5m]) > 0
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping"
+              description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has restarted {{ $value }} times in the last 5 minutes"
+
+          - alert: PodNotHealthy
+            expr: min_over_time(sum by (namespace, pod) (kube_pod_status_phase{phase=~"Pending|Unknown|Failed"})[15m:1m]) > 0
+            for: 15m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is not healthy"
+              description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in a non-ready state for longer than 15 minutes"
+
+          - alert: ContainerCpuUsageHigh
+            expr: (sum(rate(container_cpu_usage_seconds_total[5m])) by (pod_name, namespace) / sum(container_spec_cpu_quota{pod_name!=""}/container_spec_cpu_period{pod_name!=""}) by (pod_name, namespace) > 0.9)
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High CPU usage detected in pod {{ $labels.pod_name }}"
+              description: "Pod {{ $labels.pod_name }} in namespace {{ $labels.namespace }} is using {{ $value | humanizePercentage }} of allocated CPU"
+
+          - alert: ContainerMemoryUsageHigh
+            expr: (sum(container_memory_working_set_bytes{pod_name!=""}) by (pod_name, namespace) / sum(container_spec_memory_limit_bytes{pod_name!=""} > 0) by (pod_name, namespace)) > 0.9
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High memory usage detected in pod {{ $labels.pod_name }}"
+              description: "Pod {{ $labels.pod_name }} in namespace {{ $labels.namespace }} is using {{ $value | humanizePercentage }} of allocated memory"
+
+          - alert: NodeNotReady
+            expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Kubernetes Node not ready"
+              description: "Node {{ $labels.node }} has been unready for more than 5 minutes"
+
+          - alert: NodeMemoryPressure
+            expr: kube_node_status_condition{condition="MemoryPressure",status="true"} == 1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Kubernetes memory pressure"
+              description: "Node {{ $labels.node }} has MemoryPressure condition"
+
+          - alert: NodeDiskPressure
+            expr: kube_node_status_condition{condition="DiskPressure",status="true"} == 1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Kubernetes disk pressure"
+              description: "Node {{ $labels.node }} has DiskPressure condition"
+
+          - alert: PrometheusHighMemory
+            expr: container_memory_working_set_bytes{pod="prometheus-0"} / 1024 / 1024 > 1500
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Prometheus high memory usage"
+              description: "Prometheus is using {{ $value | humanize }}MB of memory (threshold: 1500MB)"
+
+  recording-rules.yml: |
+    groups:
+      - name: recording.rules
+        interval: 30s
+        rules:
+          - record: namespace:pod_memory_usage:sum
+            expr: sum(container_memory_working_set_bytes{pod!=""}) by (namespace)
+
+          - record: namespace:pod_cpu_usage:sum
+            expr: sum(rate(container_cpu_usage_seconds_total[5m])) by (namespace)
+
+          - record: pod:cpu_usage_percent:avg
+            expr: (sum(rate(container_cpu_usage_seconds_total[5m])) by (pod, namespace) / on(pod, namespace) group_left sum(container_spec_cpu_quota/container_spec_cpu_period) by (pod, namespace)) * 100
+
+          - record: pod:memory_usage_percent:avg
+            expr: (sum(container_memory_working_set_bytes) by (pod, namespace) / on(pod, namespace) group_left sum(container_spec_memory_limit_bytes > 0) by (pod, namespace)) * 100

@@ -1,0 +1,8 @@
+resources:
+  - namespace.yaml
+  - prometheus-rbac.yaml
+  - prometheus-configmap.yaml
+  - prometheus-rules.yaml
+  - prometheus-deployment.yaml
+  - grafana-deployment.yaml
+  - ingress.yaml

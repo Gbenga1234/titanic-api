@@ -65,3 +65,19 @@ module "iam" {
   aks_principal_id    = module.aks.kubelet_identity_object_id
   key_vault_id        = module.database.key_vault_id
 }
+
+module "load_balancer" {
+  source              = "../../modules/load_balancer"
+  resource_group_name = module.resource_group.name
+  location            = "East US"
+  environment         = "prod"
+  vnet_id             = module.network.vnet_id
+  subnet_id           = module.network.subnet_ids[0]
+  lb_type             = "public"
+  enable_public_ip    = true
+  sku                 = "Standard"
+  tags = {
+    Environment = "prod"
+    Project     = "titanic-api"
+  }
+}

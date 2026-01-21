@@ -25,7 +25,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: myapp
-          image: myorg/myapp:latest
+          image: gowobo/titanic-api:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000

@@ -1,0 +1,52 @@
+namespace: monitoring
+
+prometheus:
+  replicas: 1
+  image:
+    repository: prom/prometheus
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 9090
+  serviceType: ClusterIP
+  storage: 50Gi
+  storageClassName: standard
+  retention: 30d
+  scrapeInterval: 15s
+  evaluationInterval: 15s
+  clusterName: my-cluster
+  environment: production
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "2000m"
+      memory: "2Gi"
+
+grafana:
+  replicas: 1
+  image:
+    repository: grafana/grafana
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 3000
+  serviceType: ClusterIP
+  storage: 10Gi
+  storageClassName: standard
+  adminPassword: "admin123"
+  allowSignUp: "false"
+  rootUrl: "http://grafana.example.com"
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+ingress:
+  enabled: false
+  prometheus:
+    host: prometheus.example.com
+  grafana:
+    host: grafana.example.com

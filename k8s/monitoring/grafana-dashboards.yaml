@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring
+data:
+  kubernetes-cluster.json: |
+    {
+      "dashboard": {
+        "title": "Kubernetes Cluster Overview",
+        "panels": [
+          {
+            "title": "Cluster CPU Usage",
+            "targets": [
+              {
+                "expr": "sum(rate(container_cpu_usage_seconds_total[5m])) / sum(kube_node_cpu_allocatable) * 100"
+              }
+            ]
+          },
+          {
+            "title": "Cluster Memory Usage",
+            "targets": [
+              {
+                "expr": "sum(container_memory_working_set_bytes) / sum(kube_node_memory_allocatable) * 100"
+              }
+            ]
+          },
+          {
+            "title": "Pod Count by Status",
+            "targets": [
+              {
+                "expr": "sum(kube_pod_status_phase) by (phase)"
+              }
+            ]
+          },
+          {
+            "title": "Node Status",
+            "targets": [
+              {
+                "expr": "kube_node_status_condition{condition=\"Ready\",status=\"true\"}"
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+  myapp-metrics.json: |
+    {
+      "dashboard": {
+        "title": "MyApp Performance Metrics",
+        "panels": [
+          {
+            "title": "Request Rate",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total[5m])"
+              }
+            ]
+          },
+          {
+            "title": "Error Rate",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{status=~\"5..\"}[5m])"
+              }
+            ]
+          },
+          {
+            "title": "Response Latency (p95)",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))"
+              }
+            ]
+          },
+          {
+            "title": "Pod Restarts",
+            "targets": [
+              {
+                "expr": "increase(kube_pod_container_status_restarts_total[1h])"
+              }
+            ]
+          }
+        ]
+      }
+    }

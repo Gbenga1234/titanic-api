@@ -9,7 +9,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: myapp.example.com
+    - host: myapp.pipeops.com
       http:
         paths:
           - path: /
@@ -20,7 +20,7 @@ spec:
                 port:
                   number: 5000
   # TLS example (enable and add secret for TLS certs)
-  # tls:
-  #   - hosts:
-  #       - myapp.example.com
-  #     secretName: myapp-tls
+  tls:
+    - hosts:
+        - myapp.pipeops.com
+      secretName: myapp-tls
