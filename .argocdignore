@@ -1,0 +1,58 @@
+# ArgoCD Ignore Patterns
+# Files and directories to exclude from ArgoCD synchronization
+
+# Development files
+*.log
+*.tmp
+*.swp
+*.bak
+*~
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.venv/
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# CI/CD
+.github/
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+
+# Documentation (optional - remove if you want docs in ArgoCD)
+*.md
+!k8s/README.md
+
+# Test files
+tests/
+*_test.py
+pytest.ini
+.coverage
+coverage.xml
+
+# Local development
+.env
+.env.local
+
+# ArgoCD deployment files (don't sync ArgoCD configs with ArgoCD)
+argocd/
+deploy-argocd.sh

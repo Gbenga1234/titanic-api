@@ -1,7 +1,0 @@
-resources:
-  - ../../kustomization.yaml
-
-patchesStrategicMerge:
-  - replicas-patch.yaml
-  - resources-patch.yaml
-  - ingress-host-patch.yaml

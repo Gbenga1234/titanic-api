@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: pipeops
+  name: titanic-api
   labels:
-    name: pipeops
-    app: myapp
+    name: titanic-api
+    app: titanic-api

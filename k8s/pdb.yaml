@@ -1,10 +1,10 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: myapp-pdb
-  namespace: pipeops
+  name: titanic-api-pdb
+  namespace: titanic-api
 spec:
   minAvailable: 2
   selector:
     matchLabels:
-      app: myapp
+      app: titanic-api

@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-pvc
-  namespace: pipeops
+  namespace: titanic-api
 spec:
   accessModes:
     - ReadWriteOnce
@@ -10,5 +10,3 @@ spec:
     requests:
       storage: 10Gi
   storageClassName: standard
-
-  # Note: storageClassName should match your cluster's provisioner.

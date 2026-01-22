@@ -1,26 +1,20 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: myapp-ingress
-  namespace: pipeops
+  name: titanic-api-ingress
+  namespace: titanic-api
   annotations:
-    kubernetes.io/ingress.class: "nginx"
-    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
   rules:
-    - host: myapp.pipeops.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: myapp-clusterip
-                port:
-                  number: 5000
-  # TLS example (enable and add secret for TLS certs)
-  tls:
-    - hosts:
-        - myapp.pipeops.com
-      secretName: myapp-tls
+  - host: titanic-api.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: titanic-api-service
+            port:
+              number: 5000

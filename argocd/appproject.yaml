@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: titanic-api-project
+  namespace: argocd
+  labels:
+    app: titanic-api
+spec:
+  description: Titanic API Application Project
+  sourceRepos:
+    - 'https://github.com/Gbenga1234/titanic-api'  
+    - namespace: titanic-api
+      server: https://kubernetes.default.svc
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  orphanedResources:
+    warn: false
+  roles:
+    - name: developer
+      description: Developer role for Titanic API
+      policies:
+        - p, proj:titanic-api-project:developer, applications, get, titanic-api-project/*, allow
+        - p, proj:titanic-api-project:developer, applications, sync, titanic-api-project/*, allow
+        - p, proj:titanic-api-project:developer, applications, update, titanic-api-project/*, allow
+      groups:
+        - developers

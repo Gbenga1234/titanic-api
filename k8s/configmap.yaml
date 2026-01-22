@@ -1,10 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: myapp-config
-  namespace: pipeops
+  name: titanic-api-config
+  namespace: titanic-api
 data:
-  # Non-sensitive configuration
-  APP_ENV: "production"
-  LOG_LEVEL: "info"
-  FEATURE_FLAG_X: "false"
+  FLASK_ENV: "production"
+  FLASK_DEBUG: "false"
+  DATABASE_URL: "postgresql://titanic_user:password@postgres-service:5432/titanic_db"
+  SQLALCHEMY_TRACK_MODIFICATIONS: "false"
+  GUNICORN_WORKERS: "4"
+  GUNICORN_BIND: "0.0.0.0:5000"
+  GUNICORN_TIMEOUT: "30"

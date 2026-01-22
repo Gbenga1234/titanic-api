@@ -1,68 +1,61 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: myapp
-  namespace: pipeops
+  name: titanic-api
+  namespace: titanic-api
   labels:
-    app: myapp
+    app: titanic-api
 spec:
   replicas: 3
-  revisionHistoryLimit: 5
-  selector:
-    matchLabels:
-      app: myapp
   strategy:
     type: RollingUpdate
     rollingUpdate:
+      maxUnavailable: 1
       maxSurge: 1
-      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: titanic-api
   template:
     metadata:
       labels:
-        app: myapp
+        app: titanic-api
     spec:
-      serviceAccountName: myapp-sa
-      terminationGracePeriodSeconds: 30
+      serviceAccountName: titanic-api-sa
       containers:
-        - name: myapp
-          image: gowobo/titanic-api:latest
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 5000
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "128Mi"
-            limits:
-              cpu: "500m"
-              memory: "512Mi"
-          envFrom:
-            - configMapRef:
-                name: myapp-config
-            - secretRef:
-                name: myapp-secret
-          readinessProbe:
-            httpGet:
-              path: /health/ready
-              port: 5000
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 2
-            failureThreshold: 3
-          livenessProbe:
-            httpGet:
-              path: /health/live
-              port: 5000
-            initialDelaySeconds: 15
-            periodSeconds: 20
-            timeoutSeconds: 2
-            failureThreshold: 5
-          lifecycle:
-            preStop:
-              exec:
-                command: ["/bin/sh", "-c", "sleep 10"]
-
-      # Pod-level security - run as non-root recommended
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
+      - name: titanic-api
+        image: titanic-api:latest
+        ports:
+        - containerPort: 5000
+          name: http
+        envFrom:
+        - configMapRef:
+            name: titanic-api-config
+        - secretRef:
+            name: titanic-api-secret
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 15"]
