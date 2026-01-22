@@ -56,6 +56,8 @@ resource "azurerm_lb_rule" "http" {
 }
 
 # Load Balancer Rule - HTTPS
+# NOTE: For production SSL/TLS, use Application Gateway instead
+# OR configure SSL certificates from Key Vault and update this configuration
 resource "azurerm_lb_rule" "https" {
   name                           = "titanic-api-${var.environment}-https"
   loadbalancer_id                = azurerm_lb.main.id

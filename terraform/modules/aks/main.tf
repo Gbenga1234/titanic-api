@@ -3,6 +3,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   location            = var.location
   resource_group_name = var.resource_group_name
   dns_prefix          = "titanic"
+  kubernetes_version  = "1.27"
 
   default_node_pool {
     name           = "default"

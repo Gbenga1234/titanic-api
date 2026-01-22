@@ -16,7 +16,7 @@ spec:
     spec:
       initContainers:
       - name: init-db-schema
-        image: postgres:13
+        image: postgres:14
         command:
           - /bin/sh
           - -c
@@ -34,7 +34,7 @@ spec:
               key: POSTGRES_PASSWORD
       containers:
       - name: postgres
-        image: postgres:13
+        image: postgres:14
         ports:
         - containerPort: 5432
           name: postgres

@@ -3,7 +3,13 @@ output "load_balancer_id" {
 }
 
 output "public_ip_address" {
-  value = var.enable_public_ip ? azurerm_public_ip.lb[0].ip_address : null
+  value       = var.enable_public_ip ? azurerm_public_ip.lb[0].ip_address : null
+  description = "Public IP address of the load balancer"
+}
+
+output "public_ip_fqdn" {
+  value       = var.enable_public_ip ? azurerm_public_ip.lb[0].fqdn : null
+  description = "FQDN of the load balancer public IP"
 }
 
 output "private_ip_address" {

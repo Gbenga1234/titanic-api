@@ -6,13 +6,13 @@ resource "azurerm_postgresql_server" "this" {
   sku_name = var.sku_name
 
   storage_mb                   = var.storage_mb
-  backup_retention_days        = 7
-  geo_redundant_backup_enabled = false
+  backup_retention_days        = var.environment == "prod" ? 30 : 7
+  geo_redundant_backup_enabled = var.environment == "prod" ? true : false
   auto_grow_enabled            = true
 
   administrator_login          = "postgresadmin"
-  administrator_login_password = random_password.db_password.result
-  version                      = "11"
+  administrator_login_password = var.db_admin_password
+  version                      = "14"
   ssl_enforcement_enabled      = true
 
   tags = var.tags
@@ -34,11 +34,6 @@ resource "azurerm_postgresql_virtual_network_rule" "this" {
   ignore_missing_vnet_service_endpoint = true
 }
 
-resource "random_password" "db_password" {
-  length  = 16
-  special = true
-}
-
 resource "azurerm_key_vault" "this" {
   name                        = "titanic-kv-${var.environment}"
   location                    = var.location
@@ -54,8 +49,8 @@ resource "azurerm_key_vault" "this" {
 }
 
 resource "azurerm_key_vault_secret" "db_password" {
-  name         = "db-password"
-  value        = random_password.db_password.result
+  name         = "db-password-${var.environment}"
+  value        = var.db_admin_password
   key_vault_id = azurerm_key_vault.this.id
 }
 

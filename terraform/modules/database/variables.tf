@@ -27,6 +27,16 @@ variable "environment" {
   default = "dev"
 }
 
+variable "db_admin_password" {
+  description = "Database administrator password - must be at least 12 characters"
+  type        = string
+  sensitive   = true
+  validation {
+    condition     = length(var.db_admin_password) >= 12
+    error_message = "Database password must be at least 12 characters."
+  }
+}
+
 variable "tags" {
   type = map(string)
 }

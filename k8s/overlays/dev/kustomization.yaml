@@ -1,0 +1,67 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Reference the base configuration
+bases:
+  - ../../base
+
+# Dev-specific namespace
+namespace: titanic-api
+
+# Dev-specific labels
+commonLabels:
+  app: titanic-api
+  environment: dev
+  version: v1
+
+commonAnnotations:
+  environment: development
+  managed-by: kustomize
+
+# Dev-specific image tags
+images:
+  - name: titanic-api
+    newTag: dev-latest
+
+# Dev replicas (less than prod for cost savings)
+replicas:
+  - name: titanic-api
+    count: 1
+  - name: postgres
+    count: 1
+
+# Strategic merge patches for dev
+patchesStrategicMerge:
+  - deployment-patch.yaml
+  - configmap-patch.yaml
+  - hpa-patch.yaml
+
+# Dev-specific resource limits (smaller for dev)
+# Using JSON patches for more granular control
+patchesJson6902:
+  - target:
+      group: autoscaling
+      version: v2
+      kind: HorizontalPodAutoscaler
+      name: titanic-api-hpa
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 3
+
+# Custom vars for dev environment
+vars:
+  - name: DEV_REPLICAS
+    objref:
+      kind: Deployment
+      name: titanic-api
+      apiVersion: apps/v1
+    fieldref:
+      fieldpath: spec.replicas
+
+# Resource names
+namePrefix: ""
+nameSuffix: "-dev"

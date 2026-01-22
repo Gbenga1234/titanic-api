@@ -81,3 +81,16 @@ module "load_balancer" {
     Project     = "titanic-api"
   }
 }
+
+module "monitoring" {
+  source              = "../../modules/monitoring"
+  resource_group_name = module.resource_group.name
+  location            = "East US"
+  environment         = "prod"
+  aks_id              = module.aks.cluster_id
+  postgres_server_id  = module.database.server_id
+  tags = {
+    Environment = "prod"
+    Project     = "titanic-api"
+  }
+}

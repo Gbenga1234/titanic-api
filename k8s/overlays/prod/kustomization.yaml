@@ -1,0 +1,88 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Reference the base configuration
+bases:
+  - ../../base
+
+# Prod-specific namespace
+namespace: titanic-api
+
+# Prod-specific labels
+commonLabels:
+  app: titanic-api
+  environment: prod
+  version: v1
+
+commonAnnotations:
+  environment: production
+  managed-by: kustomize
+  compliance: prod-ready
+
+# Prod image tags (use specific version, not latest)
+images:
+  - name: titanic-api
+    newTag: latest
+
+# Prod replicas (higher than dev for HA)
+replicas:
+  - name: titanic-api
+    count: 3
+  - name: postgres
+    count: 1
+
+# Strategic merge patches for prod
+patchesStrategicMerge:
+  - deployment-patch.yaml
+  - configmap-patch.yaml
+  - hpa-patch.yaml
+  - pdb-patch.yaml
+
+# Prod-specific JSON patches for stricter HPA thresholds
+patchesJson6902:
+  - target:
+      group: autoscaling
+      version: v2
+      kind: HorizontalPodAutoscaler
+      name: titanic-api
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 3
+      - op: replace
+        path: /spec/maxReplicas
+        value: 10
+      - op: replace
+        path: /spec/metrics/0/resource/target/averageUtilization
+        value: 65
+
+# Add pod security standards for prod
+podSecurityStandards:
+  enforce: restricted
+  audit: restricted
+  warn: restricted
+
+# Prod-specific resource quotas
+namePrefix: ""
+nameSuffix: ""
+
+# ConfigMap generation (prod-specific environment)
+configMapGenerator:
+  - name: titanic-api-config-prod
+    literals:
+      - FLASK_ENV=production
+      - GUNICORN_WORKERS=4
+      - GUNICORN_WORKER_CLASS=sync
+      - GUNICORN_TIMEOUT=60
+      - GUNICORN_ACCESS_LOG_FORMAT=%({X-Forwarded-For}i)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s
+
+# Prod network policies (restrictive)
+# Already in base, but we ensure they're applied
+
+# Monitoring and logging
+replicas:
+  - name: titanic-api
+    count: 3
+
+# Resource recommendations for prod
+# Deployed as per Terraform spec (3 replicas on AKS with 2 CPU cores per node)

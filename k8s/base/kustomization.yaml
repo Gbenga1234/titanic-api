@@ -1,0 +1,71 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Default namespace for all resources
+namespace: titanic-api
+
+# Common labels applied to all resources
+commonLabels:
+  app: titanic-api
+  version: v1
+
+# Common annotations
+commonAnnotations:
+  managed-by: kustomize
+  deployment-tool: terraform-argocd
+
+# Base resources (core configuration)
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - serviceaccount-rolebinding.yaml
+  - service-clusterip.yaml
+  - service-postgres.yaml
+  - pvc-postgres.yaml
+  - statefulset-postgres.yaml
+  - deployment-app.yaml
+  - hpa.yaml
+  - pdb.yaml
+  - networkpolicy-db.yaml
+  - resourcequota.yaml
+  - limitrange.yaml
+  - ingress.yaml
+
+# Images to patch in deployment
+images:
+  - name: titanic-api
+    newTag: latest
+
+# Replicas configuration (can be overridden by overlays)
+replicas:
+  - name: titanic-api
+    count: 2
+  - name: postgres
+    count: 1
+
+# ConfigMap and Secret generators (if using env files)
+configMapGenerator: []
+secretGenerator: []
+
+# Vars for templating (if needed)
+vars: []
+
+# Name prefix/suffix (optional)
+namePrefix: ""
+nameSuffix: ""
+
+# Strategic merge patches (global, applied to all resources)
+patchesStrategicMerge: []
+
+# JSON patches
+patchesJson6902: []
+
+# Replacements
+replacements: []
+
+# Metadata (version info)
+metadata:
+  name: titanic-api
+  labels:
+    app: titanic-api
