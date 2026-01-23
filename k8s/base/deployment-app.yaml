@@ -23,7 +23,7 @@ spec:
       serviceAccountName: titanic-api-sa
       containers:
       - name: titanic-api
-        image: YOUR_DOCKERHUB_USERNAME/titanic-api:latest
+        image: gowobo/titanic-api:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000

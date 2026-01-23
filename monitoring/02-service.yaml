@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: titanic-api
+  namespace: titanic-api
+  labels:
+    app: titanic-api
+    app.kubernetes.io/name: titanic-api
+    app.kubernetes.io/managed-by: manual
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5000
+      targetPort: 5000
+      protocol: TCP
+      name: http
+  selector:
+    app: titanic-api

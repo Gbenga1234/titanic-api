@@ -1,0 +1,80 @@
+# ServiceMonitor for use with Prometheus Operator
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: titanic-api-monitor
+  namespace: titanic-api
+  labels:
+    app: titanic-api
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: titanic-api
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+    relabelings:
+    - source_labels: [__meta_kubernetes_pod_name]
+      action: replace
+      target_label: pod
+    - source_labels: [__meta_kubernetes_namespace]
+      action: replace
+      target_label: namespace
+    - source_labels: [__meta_kubernetes_pod_label_version]
+      action: replace
+      target_label: version
+
+---
+# ServiceMonitor for OTEL Collector
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: otel-collector-monitor
+  namespace: monitoring
+  labels:
+    app: otel-collector
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: otel-collector
+  endpoints:
+  - port: prometheus
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+    relabelings:
+    - source_labels: [__meta_kubernetes_pod_name]
+      action: replace
+      target_label: pod
+    - source_labels: [__meta_kubernetes_namespace]
+      action: replace
+      target_label: namespace
+
+---
+# ServiceMonitor for Promtail
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: promtail-monitor
+  namespace: monitoring
+  labels:
+    app: promtail
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: promtail
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+    relabelings:
+    - source_labels: [__meta_kubernetes_pod_node_name]
+      action: replace
+      target_label: node

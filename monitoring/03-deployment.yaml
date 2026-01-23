@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: titanic-api
+  namespace: titanic-api
+  labels:
+    app: titanic-api
+    app.kubernetes.io/name: titanic-api
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: manual
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: titanic-api
+  template:
+    metadata:
+      labels:
+        app: titanic-api
+        app.kubernetes.io/name: titanic-api
+        version: "1.0"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: titanic-api-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+      - name: titanic-api
+        image: gowobo/titanic-api:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+          name: http
+          protocol: TCP
+        env:
+        # OpenTelemetry Configuration
+        - name: OTEL_SDK_DISABLED
+          value: "false"
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: "grpc"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+        - name: OTEL_EXPORTER_OTLP_TIMEOUT
+          value: "10"
+        - name: OTEL_TRACES_EXPORTER
+          value: "otlp"
+        - name: OTEL_METRICS_EXPORTER
+          value: "prometheus"
+        - name: OTEL_LOGS_EXPORTER
+          value: "otlp"
+        - name: OTEL_PROPAGATORS
+          value: "tracecontext,baggage"
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: "service.name=titanic-api,service.version=1.0,service.namespace=titanic-api"
+        # Application tracing configuration
+        - name: OTEL_TRACES_SAMPLER
+          value: "parentbased_traceidratio"
+        - name: OTEL_TRACES_SAMPLER_ARG
+          value: "0.1"
+        # Logging configuration
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: LOG_FORMAT
+          value: "json"
+        envFrom:
+        - configMapRef:
+            name: titanic-api-config
+        - secretRef:
+            name: titanic-api-secret
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 5000
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 5000
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 15"]
+        # Security context
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - titanic-api
+              topologyKey: kubernetes.io/hostname

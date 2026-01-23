@@ -39,19 +39,94 @@ resource "azurerm_key_vault" "this" {
   location                    = var.location
   resource_group_name         = var.resource_group_name
   enabled_for_disk_encryption = true
+  enabled_for_template_deployment = true
+  enabled_for_deployment      = true
   tenant_id                   = data.azurerm_client_config.current.tenant_id
-  soft_delete_retention_days  = 7
-  purge_protection_enabled    = false
+  soft_delete_retention_days  = 90
+  purge_protection_enabled    = var.environment == "prod" ? true : false
 
   sku_name = "standard"
+
+  network_acls {
+    default_action = "Deny"
+    bypass         = ["AzureServices"]
+  }
 
   tags = var.tags
 }
 
+# Key Vault access policy for current user/service principal (Terraform)
+resource "azurerm_key_vault_access_policy" "terraform" {
+  key_vault_id = azurerm_key_vault.this.id
+
+  tenant_id = data.azurerm_client_config.current.tenant_id
+  object_id = data.azurerm_client_config.current.object_id
+
+  secret_permissions = [
+    "Backup",
+    "Delete",
+    "Get",
+    "List",
+    "Purge",
+    "Recover",
+    "Restore",
+    "Set",
+  ]
+
+  key_permissions = [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update",
+  ]
+}
+
+# Key Vault access policy for AKS cluster (read-only)
+resource "azurerm_key_vault_access_policy" "aks" {
+  count        = var.aks_principal_id != null ? 1 : 0
+  key_vault_id = azurerm_key_vault.this.id
+
+  tenant_id = data.azurerm_client_config.current.tenant_id
+  object_id = var.aks_principal_id
+
+  secret_permissions = [
+    "Get",
+    "List",
+  ]
+}
+
+# Database password secret
 resource "azurerm_key_vault_secret" "db_password" {
-  name         = "db-password-${var.environment}"
+  name         = "db-password"
   value        = var.db_admin_password
   key_vault_id = azurerm_key_vault.this.id
+
+  depends_on = [azurerm_key_vault_access_policy.terraform]
+
+  tags = var.tags
+}
+
+# Database connection string secret
+resource "azurerm_key_vault_secret" "db_connection_string" {
+  name         = "db-connection-string"
+  value        = "postgresql+psycopg2://postgresadmin:${var.db_admin_password}@${azurerm_postgresql_server.this.fqdn}:5432/titanic?sslmode=require"
+  key_vault_id = azurerm_key_vault.this.id
+
+  depends_on = [azurerm_key_vault_access_policy.terraform]
+
+  tags = var.tags
+}
+
+# Flask JWT secret (for session management)
+resource "azurerm_key_vault_secret" "flask_secret_key" {
+  name         = "flask-secret-key"
+  value        = var.flask_secret_key
+  key_vault_id = azurerm_key_vault.this.id
+
+  depends_on = [azurerm_key_vault_access_policy.terraform]
+
+  tags = var.tags
 }
 
 data "azurerm_client_config" "current" {}

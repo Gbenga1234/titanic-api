@@ -1,0 +1,154 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: monitoring
+  labels:
+    app: otel-collector
+data:
+  config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+      
+      # Prometheus receiver for scraping app metrics
+      prometheus:
+        config:
+          scrape_configs:
+          - job_name: 'titanic-api'
+            kubernetes_sd_configs:
+            - role: pod
+              namespaces:
+                names:
+                - titanic-api
+            relabel_configs:
+            - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+              action: keep
+              regex: true
+            - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+              action: replace
+              target_label: __metrics_path__
+              regex: (.+)
+            - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+              action: replace
+              regex: ([^:]+)(?::\d+)?;(\d+)
+              replacement: $1:$2
+              target_label: __address__
+            - action: labelmap
+              regex: __meta_kubernetes_pod_label_(.+)
+            - source_labels: [__meta_kubernetes_namespace]
+              action: replace
+              target_label: kubernetes_namespace
+            - source_labels: [__meta_kubernetes_pod_name]
+              action: replace
+              target_label: kubernetes_pod_name
+
+    processors:
+      # Batch processor for better performance
+      batch:
+        send_batch_size: 1024
+        timeout: 10s
+      
+      # Resource processor to add resource attributes
+      resource:
+        attributes:
+          actions:
+          - key: service.name
+            value: titanic-api
+            action: insert
+          - key: deployment.environment
+            value: production
+            action: insert
+      
+      # Attributes processor for trace context
+      attributes:
+        actions:
+        - key: http.method
+          pattern: ^(?P<method>GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)$
+          action: extract
+        - key: http.scheme
+          action: upsert
+          value: http
+      
+      # Memory limiter to prevent OOM
+      memory_limiter:
+        check_interval: 5s
+        limit_mib: 512
+        spike_limit_mib: 128
+      
+      # Tail sampling for production
+      tail_sampling:
+        policies:
+          # Always sample traces with errors
+          - name: error_spans
+            type: status_code
+            status_code:
+              status_codes: [ERROR]
+          
+          # Sample traces with high latency (>1s)
+          - name: high_latency
+            type: latency
+            latency:
+              threshold_ms: 1000
+          
+          # Sample 10% of successful traces
+          - name: sample_successful
+            type: probabilistic
+            probabilistic:
+              sampling_percentage: 10
+          
+          # Sample based on custom attribute
+          - name: service_spans
+            type: string_attribute
+            string_attribute:
+              key: service.name
+              values: [titanic-api]
+
+    exporters:
+      # OTLP exporter for Jaeger/Tempo
+      otlp:
+        endpoint: jaeger.monitoring.svc.cluster.local:4317
+        tls:
+          insecure: true
+      
+      # Prometheus exporter for metrics
+      prometheus:
+        endpoint: "0.0.0.0:8888"
+        namespace: otel
+        const_labels:
+          collector: titanic-api
+      
+      # Logging exporter for debugging
+      logging:
+        loglevel: debug
+
+    extensions:
+      health_check:
+        endpoint: 0.0.0.0:13133
+      pprof:
+        endpoint: 0.0.0.0:1777
+
+    service:
+      extensions: [health_check, pprof]
+      pipelines:
+        # Traces pipeline
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resource, attributes, tail_sampling]
+          exporters: [otlp, logging]
+        
+        # Metrics pipeline
+        metrics:
+          receivers: [otlp, prometheus]
+          processors: [memory_limiter, batch, resource]
+          exporters: [prometheus, logging]
+        
+        # Logs pipeline
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resource]
+          exporters: [logging]

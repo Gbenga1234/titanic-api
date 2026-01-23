@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: promtail-config
+  namespace: monitoring
+  labels:
+    app: promtail
+data:
+  promtail.yaml: |
+    server:
+      http_listen_port: 3101
+      log_level: info
+
+    positions:
+      filename: /tmp/positions.yaml
+
+    clients:
+      - url: http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push
+
+    scrape_configs:
+    # Scrape pod logs
+    - job_name: kubernetes-pods
+      kubernetes_sd_configs:
+        - role: pod
+      relabel_configs:
+        # Add pod namespace label
+        - source_labels: [__meta_kubernetes_namespace]
+          action: replace
+          target_label: namespace
+        
+        # Add pod name label
+        - source_labels: [__meta_kubernetes_pod_name]
+          action: replace
+          target_label: pod
+        
+        # Add pod container name
+        - source_labels: [__meta_kubernetes_pod_container_name]
+          action: replace
+          target_label: container
+        
+        # Add pod label 'app'
+        - source_labels: [__meta_kubernetes_pod_label_app]
+          action: replace
+          target_label: app
+        
+        # Extract trace_id from log line (optional, for structured logs)
+        - source_labels: [__meta_kubernetes_pod_labels]
+          action: replace
+          regex: '.*trace_id="([^"]+).*'
+          replacement: '$1'
+          target_label: trace_id
+        
+        # Extract request_id from log line (optional)
+        - source_labels: [__meta_kubernetes_pod_labels]
+          action: replace
+          regex: '.*request_id="([^"]+).*'
+          replacement: '$1'
+          target_label: request_id
+        
+        # Set the log path
+        - source_labels: [__meta_kubernetes_pod_container_port_name]
+          action: keep
+          regex: .*
+        
+        - source_labels: [__meta_kubernetes_pod_node_name]
+          action: replace
+          target_label: node
+        
+        # Add pod version label
+        - source_labels: [__meta_kubernetes_pod_label_version]
+          action: replace
+          target_label: version
+        
+        # Set the __path__ for log collection
+        - action: replace
+          source_labels: [__meta_kubernetes_pod_uid, __meta_kubernetes_pod_container_name]
+          target_label: __path__
+          separator: /
+          replacement: /var/log/pods/*${1}/${2}/*.log
+
+    # Scrape system logs
+    - job_name: kubernetes-pods-systemd
+      journal:
+        path: /var/log/journal
+        matches: _SYSTEMD_UNIT=kubelet.service
+      relabel_configs:
+        - source_labels: ['__journal__hostname']
+          target_label: 'hostname'
+        - source_labels: ['__journal_syslog_identifier']
+          target_label: 'unit'
+        - target_label: 'job'
+          replacement: 'systemd-journal'

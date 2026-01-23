@@ -1,7 +1,20 @@
+################################################################################
+# PYTHON & PACKAGE MANAGEMENT
+################################################################################
+
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# C extensions
+*.c
+*.o
+*.a
+*.so
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -15,6 +28,8 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -31,14 +46,17 @@ pip-delete-this-directory.txt
 # Unit test / coverage reports
 htmlcov/
 .tox/
+.nox/
 .coverage
 .coverage.*
 .cache
 nosetests.xml
 coverage.xml
 *.cover
+*.py,cover
 .hypothesis/
 .pytest_cache/
+cover/
 
 # Translations
 *.mo
@@ -48,6 +66,7 @@ coverage.xml
 *.log
 local_settings.py
 db.sqlite3
+db.sqlite3-journal
 
 # Flask stuff:
 instance/
@@ -58,24 +77,39 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+site/
 
 # PyBuilder
 target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+*.ipynb
+
+# IPython
+profile_default/
+ipython_config.py
 
 # pyenv
 .python-version
 
-# celery beat schedule file
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
 celerybeat-schedule
+celerybeat.pid
 
 # SageMath parsed files
 *.sage.py
 
 # Environments
 .env
+.env.local
+.env.*.local
 .venv
 env/
 venv/
@@ -97,6 +131,317 @@ venv.bak/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+################################################################################
+# IDE & EDITOR CONFIGURATION
+################################################################################
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+.history/
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.vim/
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# IntelliJ
+out/
+
+# VS Code specific
+.vscode
+jsconfig.json
+launch.json
+
+################################################################################
+# OPERATING SYSTEM FILES
+################################################################################
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+.Trash-*
+.directory
+
+################################################################################
+# DOCKER & CONTAINER FILES
+################################################################################
+
+# Docker volumes (local data)
+postgres_data/
+mongodb_data/
+.docker_volumes/
+
+# Docker Compose overrides for local development
+docker-compose.override.yml
+docker-compose.local.yml
+
+# Container logs
+*.log
+docker-compose.log
+
+################################################################################
+# DATABASE & LOCAL DATA
+################################################################################
+
+# SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# PostgreSQL
+postgres_data/
+pgdata/
+
+# MongoDB
+data/
+mongodb/
+
+# CSV/data files (if they're generated locally)
+*.csv
+!titanic.csv
+!titanic.sql
+
+# Backup files
+*.bak
+*.backup
+*~
+
+################################################################################
+# ENVIRONMENT & SECRETS
+################################################################################
+
+# Environment files
+.env
+.env.local
+.env.prod
+.env.dev
+.env.test
+.env.*.local
+.env.secrets
+
+# Credential files
+credentials.json
+secrets.json
+*.key
+*.pem
+*.crt
+
+# API keys and tokens
+.api_keys
+token.txt
+auth.txt
+
+################################################################################
+# BUILD & DISTRIBUTION
+################################################################################
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Compiled files
+*.pyc
+*.pyo
+*.pyd
+
+# Node (if using frontend tools)
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+################################################################################
+# TESTING & COVERAGE
+################################################################################
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+.tox/
+.nox/
+
+# Test results
+test-results/
+junit.xml
+test_results.json
+
+################################################################################
+# TERRAFORM & INFRASTRUCTURE
+################################################################################
+
+# Terraform local files
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfvars.json
+terraform/**/*.tfstate
+terraform/**/*.tfstate.*
+terraform/**/*.tfstate.backup
+terraform/crash.log
+terraform/override.tf
+terraform/override.tf.json
+terraform/*_override.tf
+terraform/*_override.tf.json
+terraform/.terraformrc
+terraform/env.tf
+
+# Terraform cloud
+terraform/cloud-init.txt
+
+################################################################################
+# KUBERNETES & DEPLOYMENT
+################################################################################
+
+# Kubernetes config
+kubeconfig
+kubeconfig.yaml
+*.kubeconfig
+
+# Generated manifests
+kustomization-generated/
+**/generated/
+
+# Helm
+Chart.lock
+charts/*/Chart.lock
+
+################################################################################
+# MONITORING & LOGS
+################################################################################
+
+# Application logs
+logs/
+*.log
+*.log.*
+logging/
+
+# Monitoring data
+prometheus_data/
+grafana_storage/
+
+# Jaeger/tracing data
+jaeger_data/
+
+################################################################################
+# MISCELLANEOUS
+################################################################################
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
+
+# OS lock files
+.DS_Store
+Thumbs.db
+
+# IDE temporary files
+.idea/
+.vscode/
+*.sublime-workspace
+
+# Generated files
+__generated__/
+auto_generated/
+
+# Cache files
+.cache/
+cache/
+
+# Temporary directories
+tmp/
+temp/
+tempfiles/
+
+# Project specific
+.DS_Store
+*.orig
+
+################################################################################
+# INCLUDE EXCEPTIONS (Force these to be tracked)
+################################################################################
+
+# Docker and compose files MUST be tracked
+!Dockerfile*
+!docker-compose*.yml
+!.dockerignore
+
+# Configuration files MUST be tracked
+!.env.example
+!.env.*.example
+!secrets.example.json
+!credentials.example.json
+
+# Important documentation
+!README.md
+!DOCKER_LOCAL_RUN.md
+
+# Kubernetes manifests
+!k8s/**/*.yaml
+!monitoring/**/*.yaml
+!monitoring/**/*.json
+
+# Terraform files (but not .tfstate)
+!terraform/**/*.tf
+!terraform/**/*.tfvars
+!terraform/README.md
+
+# GitHub Actions
+!.github/workflows/
+!.github/*.md
+
+# Git hooks
+!.githooks/
+!.git/hooks/
 
 # IDE
 .vscode/

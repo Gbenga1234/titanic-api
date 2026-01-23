@@ -23,3 +23,23 @@ output "key_vault_id" {
 output "key_vault_uri" {
   value = azurerm_key_vault.this.vault_uri
 }
+
+output "db_password_secret_id" {
+  value       = azurerm_key_vault_secret.db_password.id
+  description = "Key Vault Secret ID for database password"
+}
+
+output "db_connection_string_secret_id" {
+  value       = azurerm_key_vault_secret.db_connection_string.id
+  description = "Key Vault Secret ID for database connection string"
+}
+
+output "flask_secret_key_secret_id" {
+  value       = azurerm_key_vault_secret.flask_secret_key.id
+  description = "Key Vault Secret ID for Flask secret key"
+}
+
+output "key_vault_name" {
+  value       = azurerm_key_vault.this.name
+  description = "Key Vault name for secret retrieval"
+}

@@ -1,0 +1,190 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: titanic-api-alerts
+  namespace: titanic-api
+  labels:
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+  - name: titanic-api.rules
+    interval: 30s
+    rules:
+    # High Error Rate Alert
+    - alert: TitanicAPIHighErrorRate
+      expr: |
+        (
+          sum(rate(api_requests_total{status=~"5.."}[5m])) by (namespace, pod)
+          /
+          sum(rate(api_requests_total[5m])) by (namespace, pod)
+        ) > 0.05
+      for: 5m
+      labels:
+        severity: critical
+        service: titanic-api
+      annotations:
+        summary: "High error rate detected on {{ $labels.pod }}"
+        description: |
+          Error rate for titanic-api is {{ $value | humanizePercentage }} (threshold: 5%)
+          Pod: {{ $labels.pod }}
+          Namespace: {{ $labels.namespace }}
+        runbook_url: "https://runbooks.example.com/titanic-api-errors"
+
+    # High Latency P95 Alert
+    - alert: TitanicAPIHighLatencyP95
+      expr: |
+        histogram_quantile(0.95,
+          sum(rate(api_response_latency_seconds_bucket[5m])) by (le, namespace, pod)
+        ) > 2
+      for: 5m
+      labels:
+        severity: warning
+        service: titanic-api
+      annotations:
+        summary: "High P95 latency detected on {{ $labels.pod }}"
+        description: |
+          P95 latency for titanic-api is {{ $value | humanizeDuration }} (threshold: 2s)
+          Pod: {{ $labels.pod }}
+          Namespace: {{ $labels.namespace }}
+        runbook_url: "https://runbooks.example.com/titanic-api-latency"
+
+    # Pod Restart Burst Alert
+    - alert: TitanicAPIPodRestartBurst
+      expr: |
+        increase(kube_pod_container_status_restarts_total{pod=~"titanic-api-.*"}[15m]) > 3
+      for: 1m
+      labels:
+        severity: critical
+        service: titanic-api
+      annotations:
+        summary: "Pod restart burst detected on {{ $labels.pod }}"
+        description: |
+          Pod {{ $labels.pod }} restarted {{ $value | humanize }} times in last 15 minutes
+          Namespace: {{ $labels.namespace }}
+        runbook_url: "https://runbooks.example.com/pod-restarts"
+
+    # High Memory Usage Alert
+    - alert: TitanicAPIHighMemoryUsage
+      expr: |
+        (
+          container_memory_usage_bytes{pod=~"titanic-api-.*"}
+          /
+          container_spec_memory_limit_bytes{pod=~"titanic-api-.*"}
+        ) > 0.85
+      for: 5m
+      labels:
+        severity: warning
+        service: titanic-api
+      annotations:
+        summary: "High memory usage on {{ $labels.pod }}"
+        description: |
+          Memory usage for {{ $labels.pod }} is {{ $value | humanizePercentage }} of limit
+          Namespace: {{ $labels.namespace }}
+
+    # High CPU Usage Alert
+    - alert: TitanicAPIHighCPUUsage
+      expr: |
+        (
+          rate(container_cpu_usage_seconds_total{pod=~"titanic-api-.*"}[5m])
+          /
+          container_spec_cpu_quota{pod=~"titanic-api-.*"}
+        ) > 0.8
+      for: 5m
+      labels:
+        severity: warning
+        service: titanic-api
+      annotations:
+        summary: "High CPU usage on {{ $labels.pod }}"
+        description: |
+          CPU usage for {{ $labels.pod }} is {{ $value | humanizePercentage }} of limit
+          Namespace: {{ $labels.namespace }}
+
+    # Database Connection Pool Exhaustion Alert
+    - alert: TitanicAPIDBConnectionPoolLow
+      expr: |
+        (
+          db_pool_available_connections{pod=~"titanic-api-.*"}
+          /
+          db_pool_size{pod=~"titanic-api-.*"}
+        ) < 0.1
+      for: 2m
+      labels:
+        severity: warning
+        service: titanic-api
+      annotations:
+        summary: "Database connection pool nearly exhausted on {{ $labels.pod }}"
+        description: |
+          Only {{ $value | humanizePercentage }} of connections available
+          Pod: {{ $labels.pod }}
+
+    # Pod Crash Loop Alert
+    - alert: TitanicAPIPodCrashLoop
+      expr: |
+        rate(kube_pod_container_status_restarts_total{pod=~"titanic-api-.*"}[15m]) > 0.1
+      for: 5m
+      labels:
+        severity: critical
+        service: titanic-api
+      annotations:
+        summary: "Pod {{ $labels.pod }} is in crash loop"
+        description: |
+          Pod {{ $labels.pod }} is restarting frequently ({{ $value | humanize }}/min)
+          Namespace: {{ $labels.namespace }}
+        runbook_url: "https://runbooks.example.com/crash-loop"
+
+    # Deployment Replica Mismatch Alert
+    - alert: TitanicAPIDeploymentReplicasMismatch
+      expr: |
+        kube_deployment_spec_replicas{deployment="titanic-api"}
+        !=
+        kube_deployment_status_replicas_available{deployment="titanic-api"}
+      for: 5m
+      labels:
+        severity: warning
+        service: titanic-api
+      annotations:
+        summary: "Deployment replica mismatch for titanic-api"
+        description: |
+          Expected {{ $value }} replicas, but only {{ $labels.replicas_available }} available
+          Namespace: {{ $labels.namespace }}
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: otel-collector-alerts
+  namespace: monitoring
+  labels:
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+  - name: otel-collector.rules
+    interval: 30s
+    rules:
+    # OTEL Collector High Error Rate
+    - alert: OTELCollectorHighErrorRate
+      expr: |
+        (
+          sum(rate(otelcontributor_exporter_send_failed_spans[5m])) by (exporter)
+          /
+          sum(rate(otelcontributor_exporter_send_spans[5m])) by (exporter)
+        ) > 0.1
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "OTEL Collector exporter {{ $labels.exporter }} has high error rate"
+        description: "Error rate is {{ $value | humanizePercentage }}"
+
+    # OTEL Collector Queue Full
+    - alert: OTELCollectorQueueFull
+      expr: |
+        otelcontributor_exporter_queue_size{exporter=~".*"} == on() otelcontributor_exporter_queue_capacity
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "OTEL Collector queue is full for {{ $labels.exporter }}"
+        description: "Spans may be dropped if queue is full"
