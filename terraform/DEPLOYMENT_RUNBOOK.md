@@ -144,38 +144,6 @@ terraform apply -var-file=previous.tfvars
 kubectl rollout undo deployment/titanic-api
 ```
 
-## Troubleshooting
-
-### Common Issues
-
-**Terraform State Lock**
-```bash
-# Force unlock (use with caution)
-terraform force-unlock <lock-id>
-```
-
-**AKS Connection Issues**
-```bash
-# Reconnect to cluster
-az aks get-credentials --resource-group <rg> --name <aks> --overwrite-existing
-```
-
-**Database Connection**
-```bash
-# Check VNet integration
-az postgres server vnet-rule list --resource-group <rg> --server-name <db>
-```
-
-## Maintenance
-
-### Updates
-```bash
-# Update Terraform providers
-terraform init -upgrade
-
-# Update Kubernetes resources
-kubectl apply -f k8s/
-```
 
 ### Backups
 - Terraform state automatically backed up
