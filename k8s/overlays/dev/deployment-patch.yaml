@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
       - name: titanic-api
-        image: gowobo/titanic-api:dev-latest
+        image: gowobo/titanic-api:latest
         resources:
           requests:
             memory: "64Mi"

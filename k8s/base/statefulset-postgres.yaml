@@ -16,7 +16,7 @@ spec:
     spec:
       initContainers:
       - name: init-db-schema
-        image: postgres:14
+        image: postgres:15
         command:
           - /bin/sh
           - -c

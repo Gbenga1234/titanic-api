@@ -1,15 +1,6 @@
-# 📦 Monitoring Stack - Complete File Listing
-
-## 🎯 Start Here
-
-**First Time?** Read in this order:
-1. [GETTING_STARTED.md](GETTING_STARTED.md) - 5 minute orientation
-2. [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) - Step-by-step deploy
-3. [README.md](README.md) - Complete reference
+# 📦 Monitoring Stack Guide
 
 ---
-
-## 📂 Files Overview
 
 ### 🐳 Kubernetes Manifests (10 files)
 Production-ready YAML for Kubernetes deployment.
